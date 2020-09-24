@@ -1,31 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pet_uicomponent/Screens/MoreInfo/moreinfo.dart';
 import 'package:pet_uicomponent/constants.dart';
+import 'package:barcode_scan/barcode_scan.dart';
+import 'package:easy_permission_validator/easy_permission_validator.dart';
 
+class Body extends StatefulWidget {
+  @override
+  _BodyState createState() => _BodyState();
+}
 
+class _BodyState extends State<Body> {
+  String result = "Hello";
+  Future _scanQR() async {
+    try {
+      String qrResult = (await BarcodeScanner.scan()) as String;
+      setState(() {
+        result = qrResult;
+      });
+    } on PlatformException catch (ex) {
+      if (ex.code == BarcodeScanner.cameraAccessDenied) {
+        setState(() {
+          result = "Camera permission was denined";
+        });
+      } else {
+        setState(() {
+          result = "Unknow error $ex";
+        });
+      }
+    } on FormatException {
+      setState(() {
+        result = "You pressed the wrong button";
+      });
+    } catch (ex) {
+      setState(() {
+        result = "Unknow error $ex";
+      });
+    }
+  }
 
-class Body extends StatelessWidget {
-  final age13Check =true;
+  @override
+  final age13Check = true;
+
   final phoneOrEmail = TextEditingController();
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   Widget _buildemailandphone() {
     return TextFormField(
       controller: phoneOrEmail,
       decoration: InputDecoration(
-        labelText: 'Email or mobile',
-        labelStyle: TextStyle(color: linkColor),
-        enabledBorder:UnderlineInputBorder(
-          borderSide: BorderSide(color:linkColor)
-        ) 
-        ),
+          labelText: 'Email or mobile',
+          labelStyle: TextStyle(color: linkColor),
+          enabledBorder:
+              UnderlineInputBorder(borderSide: BorderSide(color: linkColor))),
       validator: (String value) {
         if (value.isEmpty) {
           return 'Mobile or email is required';
         }
-        if(!RegExp(
+        if (!RegExp(
                 r"^(?:[+0]9)?[0-9]{10,12}$|[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)?")
-            .hasMatch(value))
-        {
+            .hasMatch(value)) {
           return 'Please input a valid email or phone number';
         }
       },
@@ -43,10 +78,13 @@ class Body extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           GestureDetector(
+              onTap: () {
+                _scanQR();
+              },
               child: Image.asset(
-            "assets/images/qrbar.png",
-            height: size.height * 0.2,
-          )),
+                "assets/images/qrbar.png",
+                height: size.height * 0.2,
+              )),
           Text(
             "Scan a Friend Tag",
             style: TextStyle(fontSize: 17.0, color: readonlyColor),
@@ -87,9 +125,8 @@ class Body extends StatelessWidget {
             width: 600.0,
             margin: const EdgeInsets.only(right: 25, left: 25),
             child: Form(
-              key:_formKey,
-              child: Column(
-                children: <Widget>[
+              key: _formKey,
+              child: Column(children: <Widget>[
                 _buildemailandphone(),
                 ListTile(
                   title: Text("I agrreed with the Terms and Policy Privacy",
@@ -106,35 +143,32 @@ class Body extends StatelessWidget {
                   ),
                 ),
                 FlatButton(
-              padding: EdgeInsets.symmetric(vertical: 20, horizontal: 119),
-              color: linkColor,
-              onPressed: () {
-                if(!_formKey.currentState.validate()){
-                  return;
-                }else
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return MoreInfo(
-                        phoneOrEmailHandler: phoneOrEmail.text,
-                        ageCheckHandler :age13Check,
+                  padding: EdgeInsets.symmetric(vertical: 20, horizontal: 119),
+                  color: linkColor,
+                  onPressed: () {
+                    if (!_formKey.currentState.validate()) {
+                      return;
+                    } else
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return MoreInfo(
+                              phoneOrEmailHandler: phoneOrEmail.text,
+                              ageCheckHandler: age13Check,
+                            );
+                          },
+                        ),
                       );
-                    },
+                  },
+                  child: Text(
+                    "Signup",
+                    style: TextStyle(color: Colors.white),
                   ),
-                );
-              },
-              child: Text(
-                "Signup",
-                style: TextStyle(color: Colors.white),
-            
-              ),
-            ),
+                ),
               ]),
             ),
           ),
-
-          
           SizedBox(
             height: 10,
           ),
@@ -156,6 +190,4 @@ class Body extends StatelessWidget {
       ),
     );
   }
-
-  void setState(int Function() param0) {}
 }
